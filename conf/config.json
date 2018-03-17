@@ -1,0 +1,9 @@
+{
+	"ListenerAddress": "127.0.0.1:3308",
+	"User": "root",
+	"Password": "root$%^",
+	"Database": "root",
+	"LogfilePath": "/tmp/",
+	"RemoteNodes": [ "127.0.0.1", "127.0.0.1" ]
+}
+
