@@ -7,6 +7,7 @@ import  (
     "os"
     "os/signal"
     "syscall"
+    "runtime"
 )
 
 type Server struct {
@@ -90,17 +91,40 @@ func (server *Server) Close() {
 
 func (server *Server) Conn(con net.Conn)  {
 
-    for {
-        buf := make([]byte, 512)
-        n, err := con.Read(buf)
-        if err != nil {
-           log.GetLogger().Error("read data from socke error %s", err)
+    conn := server.newConn(con)
+
+    defer func() {
+        if err := recover(); err != nil {
+            const size = 4096
+            buf := make([]byte, size)
+            buf = buf[:runtime.Stack(buf, false)]
+            log.GetLogger().Error("onConn panic %v: %v\n%s", con.RemoteAddr().String(), err, buf)
         }
-        if n == 0 {
-            break
-        }
-        log.GetLogger().Info("get byte data is %s", string(buf))
+
+        con.Close()
+    }()
+
+
+    if err := con; err != nil {
+        log.GetLogger().Error("handshake error %s", err)
+        conn.Close()
+        return
     }
+
+    conn.Run()
+
+
+    //for {
+    //    buf := make([]byte, 512)
+    //    n, err := con.Read(buf)
+    //    if err != nil {
+    //       log.GetLogger().Error("read data from socke error %s", err)
+    //    }
+    //    if n == 0 {
+    //        break
+    //    }
+    //    log.GetLogger().Info("get byte data is %s", string(buf))
+    //}
     defer con.Close()
 
 }

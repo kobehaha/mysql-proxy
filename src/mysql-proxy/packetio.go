@@ -4,7 +4,7 @@ import (
     "bufio"
     "io"
     "net"
-    "github.com/CodisLabs/codis/pkg/utils/errors"
+    "errors"
     "fmt"
 )
 
@@ -36,7 +36,7 @@ func (p *PacketIo) ReadPacket() ([]byte, error){
     }
 
     // header 前3 bytes计算消息长度
-    length := int(uint32(header[0]) | uint32(header[1] | uint32(header[2])<<16 ) )
+    length := int(uint32(header[0]) | uint32(header[1])<<8 | uint32(header[2])<<16 )
 
     if length < 1 {
         return nil, fmt.Errorf("invalid playload lenth %d", length)
@@ -116,3 +116,5 @@ func (p *PacketIo) WritePacket(data []byte) error {
     }
 
 }
+
+
