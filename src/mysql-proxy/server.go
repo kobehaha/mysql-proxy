@@ -98,14 +98,15 @@ func (server *Server) Conn(con net.Conn)  {
             const size = 4096
             buf := make([]byte, size)
             buf = buf[:runtime.Stack(buf, false)]
-            log.GetLogger().Error("onConn panic %v: %v\n%s", con.RemoteAddr().String(), err, buf)
+            log.GetLogger().Error("onConn panic %v: %v: %s", con.RemoteAddr().String(), err, buf)
         }
 
         con.Close()
     }()
 
 
-    if err := con; err != nil {
+
+    if err := conn.Handshake(); err != nil {
         log.GetLogger().Error("handshake error %s", err)
         conn.Close()
         return

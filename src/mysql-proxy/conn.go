@@ -11,6 +11,7 @@ import (
     "runtime"
     "reflect"
     "unsafe"
+    "fmt"
 )
 
 var DEFAULT_CAPABILITY uint32 = CLIENT_LONG_PASSWORD | CLIENT_LONG_FLAG |
@@ -178,9 +179,10 @@ func (c *Conn) readHandshakeResponse() error {
     // 2 bytes 客户端权能标志 2 bytes 客户端权能标志扩展
     c.capability = binary.LittleEndian.Uint32(data[:4])
 
-    // 4 bytes 最大消息长度
     pos = pos + 4
 
+    // 4 bytes 最大消息长度
+    pos = pos + 4
     // 1 bytes 字符编码
     pos++
 
@@ -252,16 +254,19 @@ func (c *Conn) Handshake() error {
         return err
     }
 
+    log.GetLogger().Debug("init handshak succss")
     if err := c.readHandshakeResponse(); err != nil {
         log.GetLogger().Error("rev handshake response error %s", err.Error())
         return err
     }
 
+    log.GetLogger().Debug("read handshak response")
     if err := c.writeOk(nil); err != nil {
         log.GetLogger().Error("write ok package fiale %s", err.Error())
         return err
     }
 
+    log.GetLogger().Debug("write ok success")
     c.pkg.Sequence = 0
    return nil
 }
@@ -350,6 +355,9 @@ func (c *Conn) dispatch(data []byte) error {
         return nil
     case COM_PING:
         return c.writeOk(nil)
+    case COM_QUERY:
+        //todo 增加query 数据
+        return c.writeOk(nil)
     case COM_INIT_DB:
         if err := c.useDb(String(data)); err != nil {
             return err
@@ -357,7 +365,8 @@ func (c *Conn) dispatch(data []byte) error {
             return c.writeOk(nil)
         }
     default:
-        return errors.New("unknow command not support")
+        log.GetLogger().Error("command is %s", cmd)
+        return errors.New("unknow command not support" + string(cmd))
     }
     return nil
 }

@@ -29,7 +29,7 @@ func NewPacketIO(conn net.Conn) *PacketIo{
 func (p *PacketIo) ReadPacket() ([]byte, error){
 
     // 4 bytes mysql 数据包头
-    header := []byte{ 0,0,0.0}
+    header := []byte{ 0,0,0,0}
 
     if _, err := io.ReadFull(p.rb, header); err !=nil {
         return nil, errors.New("bad connection")
