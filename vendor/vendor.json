@@ -1,0 +1,19 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "0EhLvZ6Og9HYqJtCc2Dzs1EgM30=",
+			"path": "github.com/bitly/go-simplejson",
+			"revision": "0c965951289cce37dec52ad1f34200fefc816777",
+			"revisionTime": "2017-10-23T17:51:54Z"
+		},
+		{
+			"checksumSHA1": "lBpAywrJRBXW/Q4sZTaltKkS6fY=",
+			"path": "github.com/cfxks1989/log4go",
+			"revision": "5acf2832e019309f9c279158423a388e4d8f5733",
+			"revisionTime": "2015-07-13T09:24:22Z"
+		}
+	],
+	"rootPath": "github.com/kobehaha/mysql-proxy"
+}
