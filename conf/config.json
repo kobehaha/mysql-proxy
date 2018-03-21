@@ -1,5 +1,5 @@
 {
-	"ListenerAddress": "192.168.2.131:3308",
+	"ListenerAddress": "127.0.0.1:3308",
 	"User": "root",
 	"Password": "1234",
 	"Database": "test",
