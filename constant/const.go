@@ -1,9 +1,10 @@
-package mysql
+package constant
 
 
 
 const (
 
+    MinProtocolVersion byte   = 10
     OK_HEADER          byte = 0x00
     ERR_HEADER         byte = 0xff
     EOF_HEADER         byte = 0xfe

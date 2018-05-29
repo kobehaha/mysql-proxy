@@ -1,8 +1,8 @@
 package log
 
 import  (
-    l4g "github.com/cfxks1989/log4go"
     "path"
+    l4g "github.com/cfxks1989/log4go"
     "github.com/kobehaha/mysql-proxy/config"
 )
 

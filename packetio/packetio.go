@@ -1,4 +1,4 @@
-package mysql
+package packetio
 
 import (
     "bufio"
@@ -6,6 +6,7 @@ import (
     "net"
     "errors"
     "fmt"
+    constant "github.com/kobehaha/mysql-proxy/constant"
 )
 
 type PacketIo struct {
@@ -57,7 +58,7 @@ func (p *PacketIo) ReadPacket() ([]byte, error){
     if _, err := io.ReadFull(p.rb, data); err != nil {
        return nil , errors.New("bad connection")
     } else {
-        if length < MaxPayloadLen{
+        if length < constant.MaxPayloadLen{
            return data, nil
         }
 
@@ -80,7 +81,7 @@ func (p *PacketIo) WritePacket(data []byte) error {
     // 数据包已经包含数据头了
     length := len(data) - 4
 
-    for length > MaxPayloadLen {
+    for length > constant.MaxPayloadLen {
 
         // 处理数据头内容
         data[0] = 0xff
@@ -89,14 +90,14 @@ func (p *PacketIo) WritePacket(data []byte) error {
 
         data[3] = p.Sequence
 
-        if n, err := p.wb.Write(data[:4+MaxPayloadLen]); err != nil {
+        if n, err := p.wb.Write(data[:4+constant.MaxPayloadLen]); err != nil {
             return errors.New("bad connection")
-        } else if n != ( 4 + MaxPayloadLen){
+        } else if n != ( 4 + constant.MaxPayloadLen){
             return errors.New("bad connection")
         } else {
             p.Sequence ++
-            length = length - MaxPayloadLen
-            data = data[MaxPayloadLen:]
+            length = length - constant.MaxPayloadLen
+            data = data[constant.MaxPayloadLen:]
         }
     }
 

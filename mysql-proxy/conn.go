@@ -11,11 +11,16 @@ import (
     "reflect"
     "unsafe"
     "github.com/kobehaha/mysql-proxy/log"
+    "github.com/kobehaha/mysql-proxy/constant"
+    pki "github.com/kobehaha/mysql-proxy/packetio"
+    "github.com/kobehaha/mysql-proxy/util"
+    "fmt"
+    "strings"
 )
 
-var DEFAULT_CAPABILITY uint32 = CLIENT_LONG_PASSWORD | CLIENT_LONG_FLAG |
-        CLIENT_CONNECT_WITH_DB | CLIENT_PROTOCOL_41 |
-        CLIENT_TRANSACTIONS | CLIENT_SECURE_CONNECTION
+var DEFAULT_CAPABILITY uint32 = constant.CLIENT_LONG_PASSWORD | constant.CLIENT_LONG_FLAG |
+        constant.CLIENT_CONNECT_WITH_DB | constant.CLIENT_PROTOCOL_41 |
+        constant.CLIENT_TRANSACTIONS | constant.CLIENT_SECURE_CONNECTION
 
 
 type Conn struct {
@@ -48,7 +53,7 @@ type Conn struct {
 
     affectedRows int64
 
-    pkg *PacketIo
+    pkg *pki.PacketIo
 
     stmtId uint32
 
@@ -65,7 +70,7 @@ func (s *Server) newConn(co net.Conn) *Conn {
 
     c.c = co
 
-    c.pkg = NewPacketIO(co)
+    c.pkg = pki.NewPacketIO(co)
 
     c.server = s
 
@@ -74,9 +79,9 @@ func (s *Server) newConn(co net.Conn) *Conn {
 
     c.connectionId = atomic.AddUint32(&baseConnId, 1)
 
-    c.status = SERVER_STATUS_AUTOCOMMIT
+    c.status = constant.SERVER_STATUS_AUTOCOMMIT
 
-    c.salt = RandomBuf(20)
+    c.salt = util.RandomBuf(20)
 
     c.closed = false
 
@@ -124,7 +129,7 @@ func (c *Conn) writeInitHandshake() error {
 
     //  n bytes 服务版本号[00]
 
-    data = append(data, ServerVersion...)
+    data = append(data, constant.ServerVersion...)
     data = append(data, 0)
 
     // 4 bytes 线程id
@@ -201,7 +206,7 @@ func (c *Conn) readHandshakeResponse() error {
 
     auth := data[pos:pos+authLen]
 
-    check := CheckPassword(c.salt, []byte(c.server.password))
+    check := util.CheckPassword(c.salt, []byte(c.server.password))
 
     if !bytes.Equal(auth, check) {
         return errors.New("password is error")
@@ -209,7 +214,7 @@ func (c *Conn) readHandshakeResponse() error {
 
     pos += authLen
 
-    if c.capability&CLIENT_CONNECT_WITH_DB > 0 {
+    if c.capability&constant.CLIENT_CONNECT_WITH_DB > 0 {
 
         if len(data[pos:]) == 0 {
             return nil
@@ -277,14 +282,14 @@ func (c *Conn) writeOk(r *Result) error {
 
     data := make([]byte , 4, 32)
 
-    data = append(data , OK_HEADER)
+    data = append(data , constant.OK_HEADER)
 
 
-    data = append(data, PutLengthEncodedInt(r.AffectedRows)...)
-    data = append(data, PutLengthEncodedInt(r.InsertId)...)
+    data = append(data, util.PutLengthEncodedInt(r.AffectedRows)...)
+    data = append(data, util.PutLengthEncodedInt(r.InsertId)...)
 
 
-    if c.capability&CLIENT_PROTOCOL_41 > 0 {
+    if c.capability&constant.CLIENT_PROTOCOL_41 > 0 {
         data = append(data, byte(r.Status), byte(r.Status>>8))
         data = append(data, 0, 0)
     }
@@ -343,21 +348,35 @@ func (c *Conn) Close() error {
     return nil
 }
 
+func (c *Conn) handlerQuery(sql string) (err error){
+    defer func() {
+        if e := recover(); e != nil {
+            log.GetLogger().Error("execute %s err %v", sql, e)
+            return
+        }
+    }()
+
+    sql = strings.TrimRight(sql, ";")
+    fmt.Println("sql is %s", sql)
+    return nil
+
+}
 
 func (c *Conn) dispatch(data []byte) error {
     cmd := data[0]
     data = data[1:]
 
     switch cmd {
-    case COM_QUIT:
+    case constant.COM_QUIT:
         c.Close()
         return nil
-    case COM_PING:
+    case constant.COM_PING:
         return c.writeOk(nil)
-    case COM_QUERY:
+    case constant.COM_QUERY:
         //todo 增加query 数据
+        c.handlerQuery(String(data))
         return c.writeOk(nil)
-    case COM_INIT_DB:
+    case constant.COM_INIT_DB:
         if err := c.useDb(String(data)); err != nil {
             return err
         } else {
